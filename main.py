@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from schemas import Item
 from services import id_generator
 from database import get_db, urlshort
@@ -16,13 +16,20 @@ def root():
 
 
 @app.post("/urls")
-def get_url(url: Item, db =  Depends(get_db)):
+def get_url(url: Item, db: Session = Depends(get_db)):
+    
+    id = id_generator()
+    new_url = urlshort(
+        long_url = url.url,
+        short_id = id
+    )
 
-    short_id = id_generator()
-
+    db.add(new_url)
+    db.commit()
+    db.refresh(new_url)
     
 
-    return short_id
+    return new_url
 
 
 
